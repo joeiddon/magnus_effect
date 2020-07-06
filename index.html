@@ -1,0 +1,95 @@
+<html>
+<body style='display: flex; flex-direction: row; align-items: flex-start;'>
+<canvas width='800' height='800' id='canvas'
+    style='border: 1px solid black;'></canvas>
+<div>
+<div id='params'>
+</div>
+<p>Note the units are ignored for sake of easy simulation!</p>
+<a
+href='https://physics.stackexchange.com/a/563847/231032'>Explanation.</a>
+</div>
+<script>
+let canvas = document.getElementById('canvas');
+let ctx = canvas.getContext('2d')
+ctx.fillStyle = 'red';
+
+const r = 20;
+var g = 0.01;
+var k = 0.004;
+var m = 5;
+
+const start_x = canvas.width/2;
+const start_y = canvas.height - 20;
+var x, y;
+var vx, vy;
+function reset() {
+    x = start_x;
+    y = start_y;
+    vx = 0;
+    vy = 0;
+}
+reset();
+
+let last_time;
+function update(time) {
+    if (!last_time) {
+        last_time = time;
+        requestAnimationFrame(update);
+        return;
+    }
+    let td = time - last_time;
+    last_time = time;
+
+    // Equations of motion.
+    let ax = k / m * vy;
+    let ay = k / m * vx - g;
+
+    // Assume constant acceleration during td, the time detla...
+    // Update position: s = ut + 1/2at^2 (or if did velocity update first, then
+    // would have to use s = vt - 1/2at^2
+    x += vx + 0.5 * ax * td ** 2;
+    y += vy + 0.5 * ay * td ** 2;
+
+    // Update velocity: v = u + at.
+    vx += ax * td;
+    vy += ay * td;
+
+    //console.log(ax, ay, x, y, vx, vy);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(x, canvas.height-y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    requestAnimationFrame(update);
+}
+requestAnimationFrame(update);
+
+// Should have just used this object throughout rather than globals!
+let params = {
+    'g': 0.0002,
+    'k': 0.0002,
+    'm': 0.1
+};
+
+for (let param of Object.entries(params)) {
+    let input = document.createElement('input');
+    input.type = 'range';
+    input.style = 'width: 30em;';
+    input.value = window[param[0]] / param[1];
+    input.oninput = function() {
+        window[param[0]] = this.value * param[1];
+        this.nextElementSibling.innerText = param[0] + '=' +
+                                            window[param[0]].toFixed(4);
+        reset();
+    }
+    let span = document.createElement('span');
+    let br = document.createElement('br');
+    document.getElementById('params').appendChild(input);
+    document.getElementById('params').appendChild(span);
+    document.getElementById('params').appendChild(br);
+    input.oninput();
+}
+</script>
+</body>
+</html>
